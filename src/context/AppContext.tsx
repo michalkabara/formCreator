@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { Dispatch, ReactNode, SetStateAction, createContext, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 export interface Field {
@@ -18,21 +18,31 @@ export interface AppContext {
   formElements: Field[];
   isEditWindowVisible: boolean;
   editFieldData: Field;
+  setEditFieldData: Dispatch<SetStateAction<Field>>;
   savedForms: Form[];
   temporaryForm: Form;
+  setTemporaryForm: Dispatch<SetStateAction<Form>>;
   fieldTypes: { type: string; label: string }[];
   newFormName: string;
+  setNewFormName: Dispatch<SetStateAction<string>>;
+  handleSubmitFieldChanges: (id: string) => void;
+  handleAddField: (markup: { type: string; label: string }) => void;
+  handleEditField: (id: string) => void;
+  handleRemoveField: (id: string) => void;
+  handleCreateForm: () => void;
+  handleSaveForm: (id: string) => void;
+  setFormElements: Dispatch<SetStateAction<Field[]>>;
 }
 
-export const AppContext = createContext<AppContext | undefined>(undefined);
+export const AppContext = createContext<AppContext>(undefined);
 
-export const AppContextProvider = ({ children }) => {
+export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [formElements, setFormElements] = useState<Field[]>([]);
   const [isEditWindowVisible, setisEditWindowVisible] = useState<boolean>(false);
   const [editFieldData, setEditFieldData] = useState<Field>({});
   const [savedForms, setSavedForms] = useState<Form[]>([]);
   const [temporaryForm, setTemporaryForm] = useState<Form>({});
-  const [newFormName, setnewFormName] = useState<string>("");
+  const [newFormName, setNewFormName] = useState<string>("");
 
   const fieldTypes = [
     {
@@ -43,24 +53,24 @@ export const AppContextProvider = ({ children }) => {
     { type: "select", label: "Select field" },
   ];
 
-  const handleAddField = (markup: Element) => {
-    setFormElements((prev) => [...prev, { ...markup, id: uuidv4(), isRequired: false }]);
-    // pushnij form elementsy do objektu forma
-    setTemporaryForm({ ...temporaryForm, fields: formElements });
+  const handleAddField = (markup: { type: string; label: string }) => {
+    setTemporaryForm((prev) => ({
+      ...prev,
+      fields: [...prev.fields, { ...markup, id: uuidv4(), isRequired: false }],
+    }));
   };
 
-  const handleEditField = (id) => {
-    //show Edit UI
+  const handleEditField = (id: string) => {
     setisEditWindowVisible((prev) => !prev);
-    //take formElements array
-    const findField = formElements.find((field) => field.id === id);
-    // console.log(findField);
 
-    setEditFieldData(findField);
+    const findField = formElements.find((field) => field.id === id);
+
+    if (findField) {
+      setEditFieldData(findField);
+    }
   };
 
-  const handleSubmitFieldChanges = (id) => {
-    //update item properties
+  const handleSubmitFieldChanges = (id: string) => {
     const updatedFields = formElements.map((field) => {
       if (field.id === id) {
         return {
@@ -69,26 +79,25 @@ export const AppContextProvider = ({ children }) => {
       }
       return field;
     });
-    //update formElements array
+
     setFormElements(updatedFields);
     setisEditWindowVisible(false);
   };
 
-  const handleRemoveField = (id) => {
-    const arrayAfterUpdate = formElements.filter((item) => item.id !== id);
+  const handleRemoveField = (id: string) => {
+    const arrayAfterUpdate = temporaryForm.fields.filter((item) => item.id !== id);
 
-    setFormElements(arrayAfterUpdate);
+    setTemporaryForm((prev) => ({
+      ...prev,
+      fields: arrayAfterUpdate,
+    }));
   };
 
   const handleCreateForm = () => {
-    //stworz objekt z nowym id
     setTemporaryForm({ id: uuidv4(), name: "New Form", fields: [] });
-    //przenies na strone edycji formularza
   };
 
   const handleSaveForm = () => {
-    //sprawdz czy savedforms zawiera form o tym ID
-    //jeśli zawiera to aktualizuj tylko ten form
     const updatedForms = savedForms.map((form) => {
       if (form.id === temporaryForm.id) {
         return {
@@ -102,7 +111,8 @@ export const AppContextProvider = ({ children }) => {
       setSavedForms(updatedForms);
     } else setSavedForms((prev) => [...prev, temporaryForm]);
 
-    // setTemporaryForm({});
+    setFormElements([]);
+    setTemporaryForm({ id: uuidv4(), name: "New Form", fields: [] });
   };
 
   return (
@@ -123,7 +133,8 @@ export const AppContextProvider = ({ children }) => {
         setTemporaryForm,
         savedForms,
         newFormName,
-        setnewFormName,
+        setNewFormName,
+        setFormElements,
       }}
     >
       {children}

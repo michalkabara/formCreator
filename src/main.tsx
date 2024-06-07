@@ -17,10 +17,6 @@ const router = createBrowserRouter([
         element: <Homepage />,
       },
       {
-        path: "/editform",
-        element: <FormEditor />,
-      },
-      {
         path: "/form/:formid",
         element: <FormEditor />,
       },

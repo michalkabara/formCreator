@@ -3,7 +3,7 @@ import { AppContext, Form } from "../context/AppContext";
 import { Link } from "react-router-dom";
 
 export const Homepage = () => {
-  const { handleCreateForm, savedForms } = useContext(AppContext);
+  const { savedForms, temporaryForm, handleCreateForm } = useContext(AppContext);
 
   return (
     <div>
@@ -11,7 +11,7 @@ export const Homepage = () => {
         <div className="flex flex-col items-center gap-4">
           <p>Create your first form</p>
 
-          <Link to={`editform`}>
+          <Link to={`form/${temporaryForm.id}`}>
             <button onClick={handleCreateForm} className="bg-blue-600 p-2 rounded-md">
               Create form
             </button>
@@ -19,7 +19,7 @@ export const Homepage = () => {
         </div>
       ) : (
         <div>
-          <Link to={`editform`}>
+          <Link to={`form/${temporaryForm.id}`}>
             <button onClick={handleCreateForm} className="bg-blue-600 p-2 rounded-md">
               Create form
             </button>

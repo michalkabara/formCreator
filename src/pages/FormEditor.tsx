@@ -1,11 +1,11 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import { RxTextAlignLeft } from "react-icons/rx";
 import { DroppablePlace } from "../components/ui/DroppablePlace";
 import { HiMiniCog8Tooth } from "react-icons/hi2";
 import { EditFieldWindow } from "../components/ui/EditFieldWindow";
-import { AppContext, Field } from "../context/AppContext";
-import { Link } from "react-router-dom";
+import { AppContext, Field, Form } from "../context/AppContext";
+import { Link, useParams } from "react-router-dom";
 import { FormNameInput } from "../components/FormEditor/FormNameInput";
 import { FieldElement } from "../components/ui/FieldElement";
 
@@ -21,10 +21,31 @@ export const FormEditor = () => {
     setTemporaryForm,
     handleSaveForm,
     newFormName,
-    setnewFormName,
+    setNewFormName,
+    savedForms,
+    setFormElements,
+    handleCreateForm,
   } = useContext(AppContext);
 
   const [editFormName, setEditFormName] = useState(false);
+
+  //get form id z params
+  const { formid } = useParams();
+  // console.log(formid);
+  //ustaw fieldy formu z id
+  //ustaw nazwe
+  useEffect(() => {
+    const currentForm = savedForms.find((form: Form) => form.id === formid);
+
+    if (currentForm) {
+      setTemporaryForm(currentForm);
+      setFormElements(currentForm.fields);
+    } else {
+      handleCreateForm();
+    }
+  }, [formid, savedForms, setTemporaryForm]);
+
+  //Panie, weź w handleCreateForm id forma z URL'a, a nie generuj uuid POLICE
 
   const updateFormName = () => {
     if (newFormName.length < 3) return;
@@ -35,7 +56,7 @@ export const FormEditor = () => {
   };
 
   const cancelEditFormName = () => {
-    setnewFormName(editFormName);
+    setNewFormName(editFormName);
     setEditFormName(false);
   };
 
@@ -58,8 +79,8 @@ export const FormEditor = () => {
           <EditFieldWindow fieldData={editFieldData} handleSubmitFieldChanges={handleSubmitFieldChanges} />
         ) : (
           <div className="w-full flex flex-col gap-2 pr-6">
-            {formElements.length >= 1 ? (
-              formElements.map((field: Field) => <FieldElement field={field} />)
+            {temporaryForm.fields.length >= 1 ? (
+              temporaryForm.fields.map((field: Field) => <FieldElement key={field.id} field={field} />)
             ) : (
               <DroppablePlace />
             )}
@@ -79,12 +100,15 @@ export const FormEditor = () => {
           </div>
         )}
       </div>
-      <div>
+      <div className="text-sm">
         <Link to="/">
-          <button onClick={handleSaveForm} className="bg-blue-600 p-2 rounded-md px-4">
+          <button onClick={() => handleSaveForm(temporaryForm.id)} className="bg-blue-600 p-2 rounded-md px-4">
             Save
           </button>
         </Link>
+        <button onClick={() => handleSaveForm(temporaryForm.id)} className=" p-2 rounded-md px-4">
+          Preview Form
+        </button>
       </div>
     </>
   );

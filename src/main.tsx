@@ -20,6 +20,10 @@ const router = createBrowserRouter([
         path: "/form/:formid",
         element: <FormEditor />,
       },
+      {
+        path: "/newform",
+        element: <FormEditor />,
+      },
     ],
   },
 ]);

@@ -15,7 +15,6 @@ export interface Form {
 }
 
 export interface AppContext {
-  formElements: Field[];
   isEditWindowVisible: boolean;
   editFieldData: Field;
   setEditFieldData: Dispatch<SetStateAction<Field>>;
@@ -31,18 +30,19 @@ export interface AppContext {
   handleRemoveField: (id: string) => void;
   handleCreateForm: () => void;
   handleSaveForm: (id: string) => void;
-  setFormElements: Dispatch<SetStateAction<Field[]>>;
+  isModalVisible: boolean;
+  setIsModalVisible: Dispatch<SetStateAction<boolean>>;
 }
 
 export const AppContext = createContext<AppContext>(undefined);
 
 export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [formElements, setFormElements] = useState<Field[]>([]);
   const [isEditWindowVisible, setisEditWindowVisible] = useState<boolean>(false);
   const [editFieldData, setEditFieldData] = useState<Field>({});
   const [savedForms, setSavedForms] = useState<Form[]>([]);
   const [temporaryForm, setTemporaryForm] = useState<Form>({});
   const [newFormName, setNewFormName] = useState<string>("");
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
 
   const fieldTypes = [
     {
@@ -63,15 +63,15 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
   const handleEditField = (id: string) => {
     setisEditWindowVisible((prev) => !prev);
 
-    const findField = formElements.find((field) => field.id === id);
+    const findTemporaryField = temporaryForm.fields.find((field) => field.id === id);
 
-    if (findField) {
-      setEditFieldData(findField);
+    if (findTemporaryField) {
+      setEditFieldData(findTemporaryField);
     }
   };
 
   const handleSubmitFieldChanges = (id: string) => {
-    const updatedFields = formElements.map((field) => {
+    const updatedFields = temporaryForm.fields.map((field) => {
       if (field.id === id) {
         return {
           ...editFieldData,
@@ -80,7 +80,7 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
       return field;
     });
 
-    setFormElements(updatedFields);
+    setTemporaryForm((prev) => ({ ...prev, fields: updatedFields }));
     setisEditWindowVisible(false);
   };
 
@@ -111,7 +111,6 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
       setSavedForms(updatedForms);
     } else setSavedForms((prev) => [...prev, temporaryForm]);
 
-    setFormElements([]);
     setTemporaryForm({ id: uuidv4(), name: "New Form", fields: [] });
   };
 
@@ -119,7 +118,6 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
     <AppContext.Provider
       value={{
         isEditWindowVisible,
-        formElements,
         fieldTypes,
         editFieldData,
         setEditFieldData,
@@ -134,7 +132,8 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({ children
         savedForms,
         newFormName,
         setNewFormName,
-        setFormElements,
+        isModalVisible,
+        setIsModalVisible,
       }}
     >
       {children}
